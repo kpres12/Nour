@@ -1,4 +1,4 @@
-.PHONY: help demo start stop clean build logs local-dev local-backend local-frontend
+.PHONY: help demo start stop clean build logs local-dev local-backend local-frontend simple-local
 
 help: ## Show this help message
 	@echo "Nour - Narrative Intelligence Platform"
@@ -109,3 +109,26 @@ local-backend: ## Start backend locally
 local-frontend: ## Start frontend locally
 	@echo "⚛️  Starting frontend locally..."
 	@cd ../frontend && npm run dev
+
+# Simple local development (no database setup required)
+simple-local: ## Start simple local development (recommended for quick start)
+	@echo "🚀 Starting simple local development..."
+	@echo "📋 This will start both backend and frontend with minimal setup"
+	@echo ""
+	@echo "🔧 Starting backend..."
+	@cd ../backend && source venv/bin/activate && python run_simple.py &
+	@echo "⏳ Waiting for backend to start..."
+	@sleep 5
+	@echo "🔧 Starting frontend..."
+	@cd ../frontend && npm run dev &
+	@echo ""
+	@echo "✨ Both services are starting!"
+	@echo "🌐 Access URLs:"
+	@echo "   Frontend: http://localhost:3000"
+	@echo "   Backend:  http://localhost:8000"
+	@echo "   API Docs: http://localhost:8000/docs"
+	@echo ""
+	@echo "🔑 Use any email/password to login (demo mode)"
+	@echo ""
+	@echo "Press Ctrl+C to stop both services"
+	@wait

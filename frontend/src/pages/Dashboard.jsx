@@ -11,6 +11,7 @@ function Dashboard() {
   })
   const [recentNarratives, setRecentNarratives] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     loadDashboardData()
@@ -19,32 +20,55 @@ function Dashboard() {
   const loadDashboardData = async () => {
     try {
       setLoading(true)
+      setError(null)
       
       // Load recent narratives
-      const narratives = await apiClient.get('/narratives?limit=5')
-      setRecentNarratives(narratives)
+      const narratives = await apiClient.get('/narratives')
+      setRecentNarratives(narratives || [])
       
       // Load basic stats
-      const entities = await apiClient.get('/entities?limit=1')
-      const signals = await apiClient.get('/signals?limit=1')
-      const rules = await apiClient.get('/playbooks?limit=1')
+      const entities = await apiClient.get('/entities')
+      const signals = await apiClient.get('/signals')
+      const rules = await apiClient.get('/playbooks')
       
       setStats({
-        narratives: narratives.length,
-        entities: entities.length,
-        signals: signals.length,
-        rules: rules.length
+        narratives: narratives?.length || 0,
+        entities: entities?.length || 0,
+        signals: signals?.length || 0,
+        rules: rules?.length || 0
       })
       
     } catch (error) {
       console.error('Error loading dashboard data:', error)
+      setError('Failed to load dashboard data. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
   if (loading) {
-    return <div className="loading">Loading dashboard...</div>
+    return (
+      <div className="container">
+        <div className="loading" style={{ textAlign: 'center', padding: '4rem' }}>
+          <h2>Loading dashboard...</h2>
+          <p>Please wait while we fetch your data</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="container">
+        <div className="alert alert-error">
+          <h3>Error Loading Dashboard</h3>
+          <p>{error}</p>
+          <button onClick={loadDashboardData} className="btn-primary">
+            Try Again
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -130,7 +154,7 @@ function Dashboard() {
                   {narrative.summary}
                 </p>
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  {JSON.parse(narrative.actions || '[]').slice(0, 2).map((action, index) => (
+                  {Array.isArray(narrative.actions) ? narrative.actions.slice(0, 2).map((action, index) => (
                     <span 
                       key={index}
                       style={{
@@ -143,7 +167,11 @@ function Dashboard() {
                     >
                       {action}
                     </span>
-                  ))}
+                  )) : (
+                    <span style={{ color: 'rgba(255,255,255,0.6)', fontStyle: 'italic' }}>
+                      No actions available
+                    </span>
+                  )}
                 </div>
               </div>
             ))}
